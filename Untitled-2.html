@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Điểm Sinh Viên</title>
+    <style>
+        /* Reset và biến màu */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --accent-color: #0ea5e9;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --border-radius: 16px;
+            --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', -apple-system, sans-serif;
+        }
+        
+        /* Background tươi sáng và thân thiện */
+        body {
+            background: linear-gradient(135deg, 
+                #f0f4ff 0%,
+                #e6f0ff 25%,
+                #f0f7ff 50%,
+                #ebf4ff 75%,
+                #f5f7ff 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            padding: 25px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Hiệu ứng sóng nền */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234f46e5' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            z-index: -1;
+            animation: wave 20s linear infinite;
+        }
+        
+        /* Hiệu ứng gradient nổi */
+        body::after {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            z-index: -1;
+        }
+        
+        @keyframes wave {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 60px 60px;
+            }
+        }
+        
+        /* Container chính - Cập nhật layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "header header"
+                "sidebar main";
+            gap: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Hiệu ứng cánh hoa rơi */
+        .flower-petal {
+            position: fixed;
+            top: -50px;
+            z-index: 0;
+            pointer-events: none;
+            animation: fall linear infinite;
+            opacity: 0.6;
+            filter: blur(1px);
+        }
+        
+        .flower-petal:nth-child(5n+1) {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            border-radius: 50% 0 50% 50%;
+        }
+        
+        .flower-petal:nth-child(5n+2) {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            border-radius: 0 50% 50% 50%;
+        }
+        
+        .flower-petal:nth-child(5n+3) {
+            background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+            border-radius: 50% 50% 0 50%;
+        }
+        
+        .flower-petal:nth-child(5n+4) {
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            border-radius: 50% 50% 50% 0;
+        }
+        
+        .flower-petal:nth-child(5n+5) {
+            background: linear-gradient(135deg, #fddb92, #d1fdff);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        
+        /* Header với thiết kế sáng */
+        .app-header {
+            grid-area: header;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(79, 70, 229, 0.05) 0%,
+                rgba(124, 58, 237, 0.05) 100%);
+            z-index: -1;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.15);
+            transition: var(--transition);
+        }
+        
+        .logo:hover {
+            transform: rotate(15deg) scale(1.1);
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
+        }
+        
+        .header-text h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .header-text p {
+            color: #64748b;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 35px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--glass-border);
+            height: fit-content;
+            position: sticky;
+            top: 30px;
+        }
+        
+        .form-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .form-header h2 {
+            font-size: 1.6rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .form-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.15);
+        }
+        
+        /* Form styles */
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #475569;
+            font-size: 1.1rem;
+        }
+        
+        .input-icon {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            transition: var(--transition);
+            background: white;
+            color: var(--dark-color);
+            cursor: pointer;
+        }
+        
+        input::placeholder {
+            color: #94a3b8;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* Main content - Cập nhật để chứa thống kê */
+        .main-content {
+            grid-area: main;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 35px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            min-height: 600px;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .content-header h2 {
+            font-size: 1.6rem;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .student-count {
+            background: linear-gradient(135deg, var(--accent-color), #3b82f6);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.2);
+        }
+        
+        /* Table styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+        
+        .student-table th {
+            background: #f8fafc;
+            padding: 20px 25px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        
+        .student-table td {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            color: #475569;
+        }
+        
+        .student-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .student-table tr:hover {
+            background: #f8fafc;
+            transition: var(--transition);
+        }
+        
+        /* Thống kê - Đặt ở góc dưới bên phải */
+        .stats-section {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 20px 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: var(--transition);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            width: 320px;
+            animation: slideInFromRight 0.5s ease-out;
+        }
+        
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(79, 70, 229, 0.05) 0%,
+                rgba(124, 58, 237, 0.05) 100%);
+            z-index: -1;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .icon-1 { 
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            animation: bounce 2s infinite;
+        }
+        .icon-2 { 
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            animation: bounce 2s infinite 0.2s;
+        }
+        .icon-3 { 
+            background: linear-gradient(135deg, #10b981, #059669);
+            animation: bounce 2s infinite 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .stat-info {
+            flex-grow: 1;
+            text-align: right;
+        }
+        
+        .stat-info h3 {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            line-height: 1;
+        }
+        
+        /* Xếp loại badges */
+        .rating-badge {
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            text-align: center;
+            min-width: 100px;
+            border: 2px solid transparent;
+        }
+        
+        .rating-excellent {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border-color: #10b981;
+        }
+        
+        .rating-good {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border-color: #3b82f6;
+        }
+        
+        .rating-average {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border-color: #f59e0b;
+        }
+        
+        .rating-poor {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border-color: #ef4444;
+        }
+        
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: white;
+            box-shadow: 0 6px 15px rgba(100, 116, 139, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(100, 116, 139, 0.3);
+        }
+        
+        /* Form actions */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .form-actions .btn {
+            flex: 1;
+            min-width: 130px;
+            justify-content: center;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 70px 30px;
+            color: #94a3b8;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #475569;
+            font-weight: 600;
+        }
+        
+        /* Score colors */
+        .score-high { 
+            color: #059669; 
+            font-weight: 700; 
+            text-shadow: 0 2px 5px rgba(5, 150, 105, 0.1);
+        }
+        .score-medium { 
+            color: #f59e0b; 
+            font-weight: 600; 
+            text-shadow: 0 2px 5px rgba(245, 158, 11, 0.1);
+        }
+        .score-low { 
+            color: #ef4444; 
+            font-weight: 700; 
+            text-shadow: 0 2px 5px rgba(239, 68, 68, 0.1);
+        }
+        
+        /* Rating guide */
+        .rating-guide {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .rating-guide h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            font-size: 1.2rem;
+        }
+        
+        .guide-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+        }
+        
+        .guide-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .guide-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "sidebar"
+                    "main";
+            }
+            
+            .sidebar {
+                position: static;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .stats-section {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                align-items: stretch;
+                margin-top: 30px;
+            }
+            
+            .stat-card {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .student-table th,
+            .student-table td {
+                padding: 15px 20px;
+            }
+            
+            .stat-card {
+                padding: 15px 20px;
+            }
+            
+            .form-actions .btn {
+                min-width: 100%;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        /* Hiệu ứng hover cute cho các phần tử */
+        .logo:hover {
+            animation: spin 0.5s ease;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        input:hover, select:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+        
+        .stat-card:hover .stat-icon {
+            animation: spin 0.8s ease;
+        }
+        
+        /* Cập nhật con trỏ chuột */
+        * {
+            cursor: default;
+        }
+        
+        a, 
+        button, 
+        .btn, 
+        .action-buttons button, 
+        .form-actions button,
+        .stat-card,
+        .guide-item,
+        .student-table tr:hover {
+            cursor: pointer;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="email"],
+        input[type="password"],
+        textarea {
+            cursor: text;
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active,
+        .btn:active {
+            filter: brightness(0.9);
+        }
+    </style>
+</head>
+<body>
+    <!-- Các cánh hoa sẽ được tạo bằng JavaScript -->
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-section">
+                <div class="logo">🎓</div>
+                <div class="header-text">
+                    <h1>Hệ Thống Quản Lý Điểm Sinh Viên</h1>
+                    <p>Công cụ quản lý và đánh giá kết quả học tập</p>
+                </div>
+            </div>
+            <div class="student-count">
+                <span id="studentCount">0</span> sinh viên
+            </div>
+        </header>
+        
+        <!-- Sidebar - Form nhập liệu -->
+        <aside class="sidebar">
+            <div class="form-header">
+                <div class="form-icon">📝</div>
+                <h2>Thêm sinh viên mới</h2>
+            </div>
+            
+            <form id="studentForm">
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">🎓</span>
+                        <label for="studentId">Mã sinh viên</label>
+                    </div>
+                    <input type="text" id="studentId" placeholder="VD: SV2024001" required>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">👤</span>
+                        <label for="studentName">Họ và tên</label>
+                    </div>
+                    <input type="text" id="studentName" placeholder="Nguyễn Văn A" required>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">⭐</span>
+                        <label for="score">Điểm số (0-10)</label>
+                    </div>
+                    <input type="number" id="score" min="0" max="10" step="0.1" 
+                           placeholder="8.5" required>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span class="input-icon">🏆</span>
+                        <label for="rating">Xếp loại</label>
+                    </div>
+                    <select id="rating" disabled>
+                        <option value="">Hệ thống tự động xếp loại</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="addBtn">
+                        <span>➕</span> Thêm mới
+                    </button>
+                    <button type="button" class="btn btn-success" id="updateBtn" style="display:none;">
+                        <span>✏️</span> Cập nhật
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;">
+                        <span>↩️</span> Hủy
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="resetBtn">
+                        <span>🔄</span> Làm mới
+                    </button>
+                </div>
+            </form>
+            
+            <div class="rating-guide">
+                <h3><span>📊</span> Thang điểm đánh giá</h3>
+                <div class="guide-items">
+                    <div class="guide-item">
+                        <span class="rating-badge rating-excellent" style="padding: 6px 12px;">Xuất sắc</span>
+                        <span>9.0 - 10.0</span>
+                    </div>
+                    <div class="guide-item">
+                        <span class="rating-badge rating-excellent" style="padding: 6px 12px;">Giỏi</span>
+                        <span>8.0 - 8.9</span>
+                    </div>
+                    <div class="guide-item">
+                        <span class="rating-badge rating-good" style="padding: 6px 12px;">Khá</span>
+                        <span>6.5 - 7.9</span>
+                    </div>
+                    <div class="guide-item">
+                        <span class="rating-badge rating-average" style="padding: 6px 12px;">Trung bình</span>
+                        <span>5.0 - 6.4</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content - Danh sách sinh viên -->
+        <main class="main-content">
+            <div class="content-header">
+                <h2>📋 Danh sách sinh viên</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        <span>📥</span> Xuất dữ liệu
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="student-table">
+                    <thead>
+                        <tr>
+                            <th>Mã SV</th>
+                            <th>Họ tên</th>
+                            <th>Điểm số</th>
+                            <th>Xếp loại</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <!-- Dữ liệu sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+                
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <h3>Chưa có dữ liệu sinh viên</h3>
+                    <p>Bắt đầu bằng cách thêm sinh viên đầu tiên</p>
+                </div>
+            </div>
+            
+            <!-- Thống kê - Góc dưới bên phải -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon icon-1">👨‍🎓</div>
+                    <div class="stat-info">
+                        <h3>Tổng số sinh viên</h3>
+                        <div class="stat-value" id="totalStudents">0</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon icon-2">🏆</div>
+                    <div class="stat-info">
+                        <h3>Xuất sắc & Giỏi</h3>
+                        <div class="stat-value" id="excellentCount">0</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon icon-3">📈</div>
+                    <div class="stat-info">
+                        <h3>Sinh viên Khá</h3>
+                        <div class="stat-value" id="goodCount">0</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // JavaScript code với hiệu ứng cánh hoa rơi
+        let students = [];
+        let currentEditIndex = -1;
+        
+        // Tạo cánh hoa rơi
+        function createFlowerPetals() {
+            const numPetals = 15; // Số lượng cánh hoa
+            
+            for (let i = 0; i < numPetals; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('flower-petal');
+                
+                // Random kích thước
+                const size = Math.random() * 15 + 8;
+                petal.style.width = `${size}px`;
+                petal.style.height = `${size}px`;
+                
+                // Random vị trí bắt đầu
+                petal.style.left = `${Math.random() * 100}vw`;
+                
+                // Random tốc độ rơi
+                const duration = Math.random() * 15 + 15;
+                petal.style.animationDuration = `${duration}s`;
+                
+                // Random delay
+                const delay = Math.random() * 5;
+                petal.style.animationDelay = `${delay}s`;
+                
+                // Random xoay
+                const rotate = Math.random() * 720;
+                petal.style.animation = `fall ${duration}s linear ${delay}s infinite`;
+                
+                // Thêm vào body
+                document.body.appendChild(petal);
+                
+                // Xóa cánh hoa sau khi rơi xong để tránh DOM quá lớn
+                setTimeout(() => {
+                    if (petal.parentNode) {
+                        petal.parentNode.removeChild(petal);
+                    }
+                }, (duration + delay) * 1000);
+            }
+            
+            // Tiếp tục tạo cánh hoa mới
+            setTimeout(createFlowerPetals, 2000);
+        }
+        
+        // Gọi hàm tạo cánh hoa khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            createFlowerPetals();
+            renderStudents();
+            
+            document.getElementById('studentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addStudent();
+            });
+            
+            document.getElementById('updateBtn').addEventListener('click', addStudent);
+            document.getElementById('cancelBtn').addEventListener('click', clearForm);
+            document.getElementById('resetBtn').addEventListener('click', clearForm);
+            
+            document.getElementById('score').addEventListener('input', updateRating);
+            
+            document.getElementById('score').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('studentForm').dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+        
+        function getRating(score) {
+            if (score >= 9.0) return "Xuất sắc";
+            if (score >= 8.0) return "Giỏi";
+            if (score >= 6.5) return "Khá";
+            if (score >= 5.0) return "Trung bình";
+            return "Yếu";
+        }
+        
+        function getRatingClass(rating) {
+            switch(rating) {
+                case "Xuất sắc":
+                case "Giỏi": return "rating-excellent";
+                case "Khá": return "rating-good";
+                case "Trung bình": return "rating-average";
+                case "Yếu": return "rating-poor";
+                default: return "";
+            }
+        }
+        
+        function getScoreClass(score) {
+            if (score >= 8.0) return "score-high";
+            if (score >= 5.0) return "score-medium";
+            return "score-low";
+        }
+        
+        function renderStudents() {
+            const tableBody = document.getElementById('studentTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const studentCount = document.getElementById('studentCount');
+            
+            studentCount.textContent = students.length;
+            
+            if (students.length === 0) {
+                tableBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tableBody.innerHTML = '';
+            
+            students.forEach((student, index) => {
+                const rating = getRating(student.score);
+                const ratingClass = getRatingClass(rating);
+                const scoreClass = getScoreClass(student.score);
+                
+                const row = document.createElement('tr');
+                row.className = 'fade-in';
+                
+                row.innerHTML = `
+                    <td><strong>${student.id}</strong></td>
+                    <td>${student.name}</td>
+                    <td class="${scoreClass}">${student.score.toFixed(1)}</td>
+                    <td><span class="rating-badge ${ratingClass}">${rating}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="editStudent(${index})">
+                                <span>✏️</span> Sửa
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteStudent(${index})">
+                                <span>🗑️</span> Xóa
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('totalStudents').textContent = students.length;
+            
+            if (students.length === 0) {
+                document.getElementById('excellentCount').textContent = '0';
+                document.getElementById('goodCount').textContent = '0';
+                return;
+            }
+            
+            let excellentCount = 0;
+            let goodCount = 0;
+            
+            students.forEach(student => {
+                const rating = getRating(student.score);
+                if (rating === "Xuất sắc" || rating === "Giỏi") excellentCount++;
+                if (rating === "Khá") goodCount++;
+            });
+            
+            document.getElementById('excellentCount').textContent = excellentCount;
+            document.getElementById('goodCount').textContent = goodCount;
+        }
+        
+        function addStudent() {
+            const id = document.getElementById('studentId').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+            const score = parseFloat(document.getElementById('score').value);
+            
+            if (students.some(student => student.id === id) && currentEditIndex === -1) {
+                alert('⚠️ Mã sinh viên đã tồn tại! Vui lòng sử dụng mã khác.');
+                return;
+            }
+            
+            if (score < 0 || score > 10 || isNaN(score)) {
+                alert('❌ Điểm số phải nằm trong khoảng 0 đến 10!');
+                return;
+            }
+            
+            const newStudent = {
+                id: id,
+                name: name,
+                score: score
+            };
+            
+            if (currentEditIndex === -1) {
+                students.push(newStudent);
+            } else {
+                students[currentEditIndex] = newStudent;
+                currentEditIndex = -1;
+                
+                document.getElementById('addBtn').style.display = 'flex';
+                document.getElementById('updateBtn').style.display = 'none';
+                document.getElementById('cancelBtn').style.display = 'none';
+            }
+            
+            renderStudents();
+            clearForm();
+            
+            const btn = document.getElementById('addBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>✅</span> Thành công!';
+            btn.style.background = 'linear-gradient(135deg, var(--success-color), #059669)';
+            
+            setTimeout(() => {
+                if (currentEditIndex === -1) {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }
+            }, 1500);
+        }
+        
+        function editStudent(index) {
+            const student = students[index];
+            
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('score').value = student.score;
+            document.getElementById('rating').value = getRating(student.score);
+            
+            currentEditIndex = index;
+            document.getElementById('addBtn').style.display = 'none';
+            document.getElementById('updateBtn').style.display = 'flex';
+            document.getElementById('cancelBtn').style.display = 'flex';
+            
+            document.querySelector('.sidebar').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        
+        function deleteStudent(index) {
+            if (confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
+                students.splice(index, 1);
+                renderStudents();
+                
+                if (currentEditIndex === index) {
+                    clearForm();
+                    currentEditIndex = -1;
+                }
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('studentForm').reset();
+            document.getElementById('rating').value = '';
+            currentEditIndex = -1;
+            
+            document.getElementById('addBtn').style.display = 'flex';
+            document.getElementById('updateBtn').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+        }
+        
+        function updateRating() {
+            const score = document.getElementById('score').value;
+            const ratingSelect = document.getElementById('rating');
+            
+            if (score) {
+                const rating = getRating(parseFloat(score));
+                ratingSelect.value = rating;
+            } else {
+                ratingSelect.value = '';
+            }
+        }
+        
+        function exportData() {
+            if (students.length === 0) {
+                alert('📭 Chưa có dữ liệu để xuất!');
+                return;
+            }
+            
+            let csv = 'Mã SV,Họ tên,Điểm số,Xếp loại\n';
+            students.forEach(student => {
+                const rating = getRating(student.score);
+                csv += `${student.id},${student.name},${student.score},${rating}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `danh_sach_sinh_vien_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
